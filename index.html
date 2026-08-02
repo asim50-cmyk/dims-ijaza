@@ -5,97 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إصدار إجازة جديدة - DIMS</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- إضافة مكتبة تليجرام الأساسية -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: var(--tg-theme-bg-color, #f4f7f6);
-            color: var(--tg-theme-text-color, #333);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .container {
-            background-color: var(--tg-theme-secondary-bg-color, #fff);
-            padding: 30px 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            width: 100%;
-            max-width: 500px;
-        }
-        h2 {
-            text-align: center;
-            color: var(--tg-theme-button-color, #2c3e50);
-            margin-bottom: 25px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--tg-theme-text-color, #555);
-        }
-        input[type="text"], select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 14px;
-            background-color: var(--tg-theme-bg-color, #fff);
-            color: var(--tg-theme-text-color, #333);
-            box-sizing: border-box;
-        }
-        input[type="text"]:focus, select:focus {
-            border-color: var(--tg-theme-button-color, #3498db);
-            outline: none;
-        }
-        .gender-toggle {
-            display: flex;
-            gap: 10px;
-        }
-        .gender-toggle input[type="radio"] {
-            display: none;
-        }
-        .gender-toggle label {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin: 0;
-        }
-        .gender-toggle input[type="radio"]:checked + label {
-            background-color: var(--tg-theme-button-color, #2c3e50);
-            color: var(--tg-theme-button-text-color, #fff);
-            border-color: var(--tg-theme-button-color, #2c3e50);
-        }
-        .btn-submit {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--tg-theme-button-color, #27ae60);
-            color: var(--tg-theme-button-text-color, white);
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: inherit;
-            transition: opacity 0.3s;
-            margin-top: 10px;
-        }
-        .btn-submit:hover {
-            opacity: 0.8;
-        }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--tg-theme-bg-color, #f4f7f6); color: var(--tg-theme-text-color, #333); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .container { background-color: var(--tg-theme-secondary-bg-color, #fff); padding: 30px 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
+        h2 { text-align: center; color: var(--tg-theme-button-color, #2c3e50); margin-bottom: 25px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--tg-theme-text-color, #555); }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 14px; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #333); box-sizing: border-box; }
+        input[type="text"]:focus, select:focus { border-color: var(--tg-theme-button-color, #3498db); outline: none; }
+        .toggle-group { display: flex; gap: 10px; }
+        .toggle-group input[type="radio"] { display: none; }
+        .toggle-group label { flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; transition: all 0.3s; margin: 0; }
+        .toggle-group input[type="radio"]:checked + label { background-color: var(--tg-theme-button-color, #2c3e50); color: var(--tg-theme-button-text-color, #fff); border-color: var(--tg-theme-button-color, #2c3e50); }
+        .btn-submit { width: 100%; padding: 12px; background-color: var(--tg-theme-button-color, #27ae60); color: var(--tg-theme-button-text-color, white); border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; transition: opacity 0.3s; margin-top: 10px; }
+        .btn-submit:hover { opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -111,12 +35,24 @@
 
         <div class="form-group">
             <label>النوع</label>
-            <div class="gender-toggle">
+            <div class="toggle-group">
                 <input type="radio" id="male" name="gender" value="male" checked>
                 <label for="male">ذكر 👨</label>
                 
                 <input type="radio" id="female" name="gender" value="female">
                 <label for="female">أنثى 🧕</label>
+            </div>
+        </div>
+
+        <!-- التعديل الجديد: اختيار الطريق -->
+        <div class="form-group">
+            <label>طريق الإجازة</label>
+            <div class="toggle-group">
+                <input type="radio" id="shatibiyyah" name="tariq_type" value="shatibiyyah" checked>
+                <label for="shatibiyyah">الشاطبية والدرة</label>
+                
+                <input type="radio" id="tayyibah" name="tariq_type" value="tayyibah">
+                <label for="tayyibah">الطيبة</label>
             </div>
         </div>
 
@@ -171,17 +107,17 @@
 </div>
 
 <script>
-    // تهيئة واجهة تليجرام
     let tg = window.Telegram.WebApp;
     tg.expand();
 
     document.getElementById('ijazaForm').addEventListener('submit', function(e) {
         e.preventDefault(); 
         
-        // جمع البيانات
+        // جمع البيانات متضمنة طريق الإجازة
         const formData = {
             name: document.getElementById('studentName').value,
             gender: document.querySelector('input[name="gender"]:checked').value,
+            tariq_type: document.querySelector('input[name="tariq_type"]:checked').value,
             target_id: document.getElementById('riwaya').value
         };
 
@@ -190,12 +126,10 @@
             return;
         }
 
-        // تغيير شكل الزر
         const btn = document.querySelector('.btn-submit');
         btn.textContent = "جاري تحضير المعاينة... ⏳";
         btn.disabled = true;
 
-        // إرسال البيانات للبوت وإغلاق الشاشة فوراً
         tg.sendData(JSON.stringify(formData));
         tg.close();
     });
