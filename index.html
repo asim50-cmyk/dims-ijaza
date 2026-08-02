@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إصدار إجازة جديدة - DIMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- إضافة مكتبة تليجرام الأساسية -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--tg-theme-bg-color, #f4f7f6);
+            color: var(--tg-theme-text-color, #333);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: var(--tg-theme-secondary-bg-color, #fff);
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 500px;
+        }
+        h2 {
+            text-align: center;
+            color: var(--tg-theme-button-color, #2c3e50);
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--tg-theme-text-color, #555);
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            background-color: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #333);
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus, select:focus {
+            border-color: var(--tg-theme-button-color, #3498db);
+            outline: none;
+        }
+        .gender-toggle {
+            display: flex;
+            gap: 10px;
+        }
+        .gender-toggle input[type="radio"] {
+            display: none;
+        }
+        .gender-toggle label {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0;
+        }
+        .gender-toggle input[type="radio"]:checked + label {
+            background-color: var(--tg-theme-button-color, #2c3e50);
+            color: var(--tg-theme-button-text-color, #fff);
+            border-color: var(--tg-theme-button-color, #2c3e50);
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--tg-theme-button-color, #27ae60);
+            color: var(--tg-theme-button-text-color, white);
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            transition: opacity 0.3s;
+            margin-top: 10px;
+        }
+        .btn-submit:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>إصدار إجازة جديدة 📜</h2>
+    <form id="ijazaForm">
+        
+        <div class="form-group">
+            <label for="studentName">اسم الطالب رباعياً</label>
+            <input type="text" id="studentName" placeholder="مثال: أحمد محمد علي محمود" required>
+        </div>
+
+        <div class="form-group">
+            <label>النوع</label>
+            <div class="gender-toggle">
+                <input type="radio" id="male" name="gender" value="male" checked>
+                <label for="male">ذكر 👨</label>
+                
+                <input type="radio" id="female" name="gender" value="female">
+                <label for="female">أنثى 🧕</label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="riwaya">الرواية / القراءة</label>
+            <select id="riwaya" required>
+                <option value="" disabled selected>اختر القراءة أو الرواية...</option>
+                <option value="3" style="font-weight: bold;">1. قراءة الإمام نافع المدني كاملة</option>
+                <option value="1">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قالون عن نافع</option>
+                <option value="2">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش عن نافع</option>
+                
+                <option value="6" style="font-weight: bold;">2. قراءة الإمام ابن كثير المكي كاملة</option>
+                <option value="5">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية البزي عن ابن كثير</option>
+                <option value="4">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قنبل عن ابن كثير</option>
+                
+                <option value="9" style="font-weight: bold;">3. قراءة الإمام أبي عمرو البصري كاملة</option>
+                <option value="7">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية الدوري عن أبي عمرو</option>
+                <option value="8">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية السوسي عن أبي عمرو</option>
+                
+                <option value="12" style="font-weight: bold;">4. قراءة الإمام ابن عامر الشامي كاملة</option>
+                <option value="11">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية هشام عن ابن عامر</option>
+                <option value="10">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن ذكوان عن ابن عامر</option>
+                
+                <option value="15" style="font-weight: bold;">5. قراءة الإمام عاصم الكوفي كاملة</option>
+                <option value="13">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية شعبة عن عاصم</option>
+                <option value="14">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية حفص عن عاصم</option>
+                
+                <option value="18" style="font-weight: bold;">6. قراءة الإمام حمزة الكوفي كاملة</option>
+                <option value="16">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية خلف عن حمزة</option>
+                <option value="17">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية خلاد عن حمزة</option>
+                
+                <option value="21" style="font-weight: bold;">7. قراءة الإمام الكسائي الكوفي كاملة</option>
+                <option value="19">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية أبي الحارث عن الكسائي</option>
+                <option value="20">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية الدوري عن الكسائي</option>
+                
+                <option value="24" style="font-weight: bold;">8. قراءة الإمام أبي جعفر المدني كاملة</option>
+                <option value="22">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن وردان عن أبي جعفر</option>
+                <option value="23">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن جماز عن أبي جعفر</option>
+                
+                <option value="27" style="font-weight: bold;">9. قراءة الإمام يعقوب الحضرمي كاملة</option>
+                <option value="25">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية رويس عن يعقوب</option>
+                <option value="26">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية روح عن يعقوب</option>
+                
+                <option value="30" style="font-weight: bold;">10. قراءة الإمام خلف العاشر كاملة</option>
+                <option value="28">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية إسحاق عن خلف</option>
+                <option value="29">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية إدريس عن خلف</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-submit">توليد مسودة الإجازة</button>
+    </form>
+</div>
+
+<script>
+    // تهيئة واجهة تليجرام
+    let tg = window.Telegram.WebApp;
+    tg.expand();
+
+    document.getElementById('ijazaForm').addEventListener('submit', function(e) {
+        e.preventDefault(); 
+        
+        // جمع البيانات
+        const formData = {
+            name: document.getElementById('studentName').value,
+            gender: document.querySelector('input[name="gender"]:checked').value,
+            target_id: document.getElementById('riwaya').value
+        };
+
+        if(!formData.target_id) {
+            tg.showAlert("الرجاء اختيار القراءة أو الرواية!");
+            return;
+        }
+
+        // تغيير شكل الزر
+        const btn = document.querySelector('.btn-submit');
+        btn.textContent = "جاري تحضير المعاينة... ⏳";
+        btn.disabled = true;
+
+        // إرسال البيانات للبوت وإغلاق الشاشة فوراً
+        tg.sendData(JSON.stringify(formData));
+        tg.close();
+    });
+</script>
+
+</body>
+</html>
