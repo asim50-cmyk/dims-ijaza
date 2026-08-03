@@ -44,7 +44,6 @@
             </div>
         </div>
 
-        <!-- التعديل الجديد: اختيار الطريق -->
         <div class="form-group">
             <label>طريق الإجازة</label>
             <div class="toggle-group">
@@ -62,7 +61,8 @@
                 <option value="" disabled selected>اختر القراءة أو الرواية...</option>
                 <option value="3" style="font-weight: bold;">1. قراءة الإمام نافع المدني كاملة</option>
                 <option value="1">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قالون عن نافع</option>
-                <option value="2">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش عن نافع</option>
+                <option value="2">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأزرق) عن نافع</option>
+                <option value="31">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأصبهاني) عن نافع (طيبة فقط)</option>
                 
                 <option value="6" style="font-weight: bold;">2. قراءة الإمام ابن كثير المكي كاملة</option>
                 <option value="5">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية البزي عن ابن كثير</option>
@@ -113,7 +113,6 @@
     document.getElementById('ijazaForm').addEventListener('submit', function(e) {
         e.preventDefault(); 
         
-        // جمع البيانات متضمنة طريق الإجازة
         const formData = {
             name: document.getElementById('studentName').value,
             gender: document.querySelector('input[name="gender"]:checked').value,
