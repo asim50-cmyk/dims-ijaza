@@ -20,6 +20,7 @@
         .toggle-group input[type="radio"]:checked + label { background-color: var(--tg-theme-button-color, #2c3e50); color: var(--tg-theme-button-text-color, #fff); border-color: var(--tg-theme-button-color, #2c3e50); }
         .btn-submit { width: 100%; padding: 12px; background-color: var(--tg-theme-button-color, #27ae60); color: var(--tg-theme-button-text-color, white); border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; transition: opacity 0.3s; margin-top: 10px; }
         .btn-submit:hover { opacity: 0.8; }
+        .hidden-option { display: none; }
     </style>
 </head>
 <body>
@@ -62,7 +63,7 @@
                 <option value="3" style="font-weight: bold;">1. قراءة الإمام نافع المدني كاملة</option>
                 <option value="1">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قالون عن نافع</option>
                 <option value="2">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأزرق) عن نافع</option>
-                <option value="31">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأصبهاني) عن نافع (طيبة فقط)</option>
+                <option value="31" id="opt-asbahani">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأصبهاني) عن نافع (طيبة فقط)</option>
                 
                 <option value="6" style="font-weight: bold;">2. قراءة الإمام ابن كثير المكي كاملة</option>
                 <option value="5">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية البزي عن ابن كثير</option>
@@ -109,6 +110,29 @@
 <script>
     let tg = window.Telegram.WebApp;
     tg.expand();
+
+    // برمجة الإخفاء والإظهار للأصبهاني
+    const shatibiyyahRadio = document.getElementById('shatibiyyah');
+    const tayyibahRadio = document.getElementById('tayyibah');
+    const asbahaniOption = document.getElementById('opt-asbahani');
+    const riwayaSelect = document.getElementById('riwaya');
+
+    function toggleAsbahani() {
+        if (shatibiyyahRadio.checked) {
+            asbahaniOption.style.display = 'none';
+            asbahaniOption.disabled = true;
+            if (riwayaSelect.value === '31') {
+                riwayaSelect.value = ''; // تصفير الاختيار لو كان مختاره
+            }
+        } else {
+            asbahaniOption.style.display = 'block';
+            asbahaniOption.disabled = false;
+        }
+    }
+
+    shatibiyyahRadio.addEventListener('change', toggleAsbahani);
+    tayyibahRadio.addEventListener('change', toggleAsbahani);
+    toggleAsbahani(); // تشغيلها أول مرة يفتح فيها الواجهة
 
     document.getElementById('ijazaForm').addEventListener('submit', function(e) {
         e.preventDefault(); 
