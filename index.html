@@ -110,8 +110,9 @@
         <div class="form-group" id="tariq-group" style="display: none;">
             <label>طريق الإجازة</label>
             <div class="toggle-group">
+                <!-- الزر الأول الذي سيتغير اسمه ديناميكياً -->
                 <input type="radio" id="shatibiyyah" name="tariq_type" value="shatibiyyah" checked>
-                <label for="shatibiyyah" id="lbl_shatibiyyah">الشاطبية والدرة</label>
+                <label for="shatibiyyah" id="lbl_shatibiyyah">الشاطبية</label>
                 
                 <input type="radio" id="tayyibah" name="tariq_type" value="tayyibah">
                 <label for="tayyibah" id="lbl_tayyibah">الطيبة</label>
@@ -166,10 +167,13 @@
             lblTayyibah.style.display = 'inline-block';
             lblCombinedWrapper.style.display = 'inline-block';
 
+            // === التعديل الذكي لتغيير اسم الزر الأول ===
             if (val <= 21) {
+                lblShatibiyyah.innerHTML = 'الشاطبية';
                 lblCombinedText.innerHTML = 'شاطبية وطيبة';
                 radioCombined.value = 'shatibiyyah_tayyibah';
             } else if (val >= 22 && val <= 30) {
+                lblShatibiyyah.innerHTML = 'الدرة';
                 lblCombinedText.innerHTML = 'درة وطيبة';
                 radioCombined.value = 'durrah_tayyibah';
             }
