@@ -16,7 +16,7 @@
         input[type="text"]:focus, select:focus { border-color: var(--tg-theme-button-color, #3498db); outline: none; }
         .toggle-group { display: flex; gap: 10px; }
         .toggle-group input[type="radio"] { display: none; }
-        .toggle-group label { flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; transition: all 0.3s; margin: 0; }
+        .toggle-group label { flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; transition: all 0.3s; margin: 0; font-size: 14px;}
         .toggle-group input[type="radio"]:checked + label { background-color: var(--tg-theme-button-color, #2c3e50); color: var(--tg-theme-button-text-color, #fff); border-color: var(--tg-theme-button-color, #2c3e50); }
         .btn-submit { width: 100%; padding: 12px; background-color: var(--tg-theme-button-color, #27ae60); color: var(--tg-theme-button-text-color, white); border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; transition: opacity 0.3s; margin-top: 10px; }
         .btn-submit:hover { opacity: 0.8; }
@@ -29,11 +29,13 @@
     <h2>إصدار إجازة جديدة 📜</h2>
     <form id="ijazaForm">
         
+        <!-- 1. الاسم -->
         <div class="form-group">
             <label for="studentName">اسم الطالب رباعياً</label>
             <input type="text" id="studentName" placeholder="مثال: أحمد محمد علي محمود" required>
         </div>
 
+        <!-- 2. النوع -->
         <div class="form-group">
             <label>النوع</label>
             <div class="toggle-group">
@@ -45,37 +47,25 @@
             </div>
         </div>
 
+        <!-- 3. نوع الإجازة / الرواية -->
         <div class="form-group">
-            <label>طريق الإجازة</label>
-            <div class="toggle-group">
-                <input type="radio" id="shatibiyyah" name="tariq_type" value="shatibiyyah" checked>
-                <label for="shatibiyyah">الشاطبية والدرة</label>
-                
-                <input type="radio" id="tayyibah" name="tariq_type" value="tayyibah">
-                <label for="tayyibah">الطيبة</label>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label for="riwaya">الرواية / القراءة / الإجازات الجامعة</label>
+            <label for="riwaya">نوع الإجازة / الرواية المطلوبة</label>
             <select id="riwaya" required>
-                <option value="" disabled selected>اختر النوع المطلوب...</option>
+                <option value="" disabled selected>اختر الإجازة...</option>
                 
-                <!-- الإجازات الجامعة الجديدة -->
-                <optgroup label="🌟 الإجازات الجامعة (بدون أسانيد مفصلة) 🌟">
-                    <option value="101" class="opt-shatibiyyah-only">القراءات السبع من طريق الشاطبية</option>
-                    <option value="102" class="opt-shatibiyyah-only">القراءات الثلاث المتممة من طريق الدرة</option>
-                    <option value="103" class="opt-shatibiyyah-only">القراءات العشر الصغرى (شاطبية ودرة)</option>
-                    <option value="104" class="opt-tayyibah-only">القراءات العشر الكبرى من طريق الطيبة</option>
-                    <option value="105" class="opt-tayyibah-only">القراءات العشر الصغرى والكبرى معاً</option>
+                <optgroup label="🌟 الإجازات الجامعة">
+                    <option value="101">القراءات السبع من طريق الشاطبية</option>
+                    <option value="102">القراءات الثلاث المتممة من طريق الدرة</option>
+                    <option value="103">القراءات العشر الصغرى (شاطبية ودرة)</option>
+                    <option value="104">القراءات العشر الكبرى من طريق الطيبة</option>
+                    <option value="105">القراءات العشر الصغرى والكبرى معاً</option>
                 </optgroup>
 
-                <!-- الإجازات المفصلة المعتادة -->
-                <optgroup label="📖 الإجازات التفصيلية (بقراءة أو رواية)">
+                <optgroup label="📖 الإجازات التفصيلية">
                     <option value="3" style="font-weight: bold;">1. قراءة الإمام نافع المدني كاملة</option>
                     <option value="1">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قالون عن نافع</option>
                     <option value="2">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأزرق) عن نافع</option>
-                    <option value="31" class="opt-tayyibah-only">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأصبهاني) عن نافع</option>
+                    <option value="31">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأصبهاني) عن نافع</option>
                     
                     <option value="6" style="font-weight: bold;">2. قراءة الإمام ابن كثير المكي كاملة</option>
                     <option value="5">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية البزي عن ابن كثير</option>
@@ -116,6 +106,21 @@
             </select>
         </div>
 
+        <!-- 4. طريق الإجازة (يظهر ويختفي برمجياً) -->
+        <div class="form-group" id="tariq-group" style="display: none;">
+            <label>طريق الإجازة</label>
+            <div class="toggle-group">
+                <input type="radio" id="shatibiyyah" name="tariq_type" value="shatibiyyah" checked>
+                <label for="shatibiyyah" id="lbl_shatibiyyah">الشاطبية والدرة</label>
+                
+                <input type="radio" id="tayyibah" name="tariq_type" value="tayyibah">
+                <label for="tayyibah" id="lbl_tayyibah">الطيبة</label>
+
+                <input type="radio" id="combined" name="tariq_type" value="combined">
+                <label for="combined" id="lbl_combined_wrapper"><span id="lbl_combined_text">أكثر من طريق</span></label>
+            </div>
+        </div>
+
         <button type="submit" class="btn-submit">توليد مسودة الإجازة</button>
     </form>
 </div>
@@ -124,41 +129,74 @@
     let tg = window.Telegram.WebApp;
     tg.expand();
 
-    const shatibiyyahRadio = document.getElementById('shatibiyyah');
-    const tayyibahRadio = document.getElementById('tayyibah');
     const riwayaSelect = document.getElementById('riwaya');
+    const tariqGroup = document.getElementById('tariq-group');
+    
+    const lblShatibiyyah = document.getElementById('lbl_shatibiyyah');
+    const lblTayyibah = document.getElementById('lbl_tayyibah');
+    const lblCombinedWrapper = document.getElementById('lbl_combined_wrapper');
+    const lblCombinedText = document.getElementById('lbl_combined_text');
+    
+    const radioShatibiyyah = document.getElementById('shatibiyyah');
+    const radioTayyibah = document.getElementById('tayyibah');
+    const radioCombined = document.getElementById('combined');
 
-    // دالة ذكية لإخفاء وإظهار الاختيارات بناءً على نوع الطريق
-    function toggleOptions() {
-        const tayyibahOpts = document.querySelectorAll('.opt-tayyibah-only');
-        const shatibiyyahOpts = document.querySelectorAll('.opt-shatibiyyah-only');
-        
-        if (shatibiyyahRadio.checked) {
-            tayyibahOpts.forEach(opt => { opt.style.display = 'none'; opt.disabled = true; });
-            shatibiyyahOpts.forEach(opt => { opt.style.display = 'block'; opt.disabled = false; });
-        } else {
-            tayyibahOpts.forEach(opt => { opt.style.display = 'block'; opt.disabled = false; });
-            shatibiyyahOpts.forEach(opt => { opt.style.display = 'none'; opt.disabled = true; });
+    function updateTariqUI() {
+        const val = parseInt(riwayaSelect.value);
+        if (!val) {
+            tariqGroup.style.display = 'none';
+            return;
         }
-        
-        // مسح الاختيار إذا كان المستخدم اختار شيئاً ثم قام بتغيير الطريق فاختفى الاختيار
-        const selectedOpt = riwayaSelect.options[riwayaSelect.selectedIndex];
-        if (selectedOpt && selectedOpt.disabled) {
-            riwayaSelect.value = '';
+
+        if (val >= 101) {
+            // إجازة جامعة: إخفاء الطرق تماماً
+            tariqGroup.style.display = 'none';
+        } 
+        else if (val === 31) {
+            // الأصبهاني: الطيبة فقط
+            tariqGroup.style.display = 'block';
+            lblShatibiyyah.style.display = 'none';
+            lblCombinedWrapper.style.display = 'none';
+            radioTayyibah.checked = true;
+        } 
+        else {
+            // قراءة أو رواية مفصلة
+            tariqGroup.style.display = 'block';
+            lblShatibiyyah.style.display = 'inline-block';
+            lblTayyibah.style.display = 'inline-block';
+            lblCombinedWrapper.style.display = 'inline-block';
+
+            if (val <= 21) {
+                lblCombinedText.innerHTML = 'شاطبية وطيبة';
+                radioCombined.value = 'shatibiyyah_tayyibah';
+            } else if (val >= 22 && val <= 30) {
+                lblCombinedText.innerHTML = 'درة وطيبة';
+                radioCombined.value = 'durrah_tayyibah';
+            }
+
+            // لضمان وجود اختيار صحيح
+            if (val !== 31 && !radioShatibiyyah.checked && !radioTayyibah.checked && !radioCombined.checked) {
+                radioShatibiyyah.checked = true;
+            }
         }
     }
 
-    shatibiyyahRadio.addEventListener('change', toggleOptions);
-    tayyibahRadio.addEventListener('change', toggleOptions);
-    toggleOptions(); // تشغيل عند فتح الصفحة
+    riwayaSelect.addEventListener('change', updateTariqUI);
+    updateTariqUI(); // تشغيل عند البدء
 
     document.getElementById('ijazaForm').addEventListener('submit', function(e) {
         e.preventDefault(); 
         
+        let selectedTariq = "comprehensive"; // القيمة الافتراضية لو كانت إجازة جامعة
+        if (parseInt(document.getElementById('riwaya').value) < 101) {
+            const checkedTariq = document.querySelector('input[name="tariq_type"]:checked');
+            if(checkedTariq) selectedTariq = checkedTariq.value;
+        }
+
         const formData = {
             name: document.getElementById('studentName').value,
             gender: document.querySelector('input[name="gender"]:checked').value,
-            tariq_type: document.querySelector('input[name="tariq_type"]:checked').value,
+            tariq_type: selectedTariq,
             target_id: document.getElementById('riwaya').value
         };
 
