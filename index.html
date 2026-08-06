@@ -1,325 +1,200 @@
-import os
-import json
-import time
-import re
-from docxtpl import DocxTemplate, RichText
-from datetime import datetime
-from hijri_converter import Gregorian
-from docx2pdf import convert
-import pythoncom
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إصدار إجازة جديدة - DIMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: var(--tg-theme-bg-color, #f4f7f6); color: var(--tg-theme-text-color, #333); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+        .container { background-color: var(--tg-theme-secondary-bg-color, #fff); padding: 30px 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
+        h2 { text-align: center; color: var(--tg-theme-button-color, #2c3e50); margin-bottom: 25px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--tg-theme-text-color, #555); }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 14px; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #333); box-sizing: border-box; }
+        input[type="text"]:focus, select:focus { border-color: var(--tg-theme-button-color, #3498db); outline: none; }
+        .toggle-group { display: flex; gap: 10px; }
+        .toggle-group input[type="radio"] { display: none; }
+        .toggle-group label { flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; transition: all 0.3s; margin: 0; font-size: 14px;}
+        .toggle-group input[type="radio"]:checked + label { background-color: var(--tg-theme-button-color, #2c3e50); color: var(--tg-theme-button-text-color, #fff); border-color: var(--tg-theme-button-color, #2c3e50); }
+        .btn-submit { width: 100%; padding: 12px; background-color: var(--tg-theme-button-color, #27ae60); color: var(--tg-theme-button-text-color, white); border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; transition: opacity 0.3s; margin-top: 10px; }
+        .btn-submit:hover { opacity: 0.8; }
+        select optgroup { font-weight: bold; background: #f9f9f9; }
+    </style>
+</head>
+<body>
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# مسارات قواعد البيانات
-ASANEED_SHATIBIYYAH_PATH = os.path.join(BASE_DIR, "database", "asaneed.json")
-ASANEED_TAYYIBAH_7_PATH = os.path.join(BASE_DIR, "database", "asaneed_7_tayypa.json")
-ASANEED_TAYYIBAH_3_PATH = os.path.join(BASE_DIR, "database", "asaneed_3_tayypa.json")
-ASANEED_MULTI_PATH = os.path.join(BASE_DIR, "database", "asaneed_multi.json") # قاعدة الصفحات المتعددة
-
-WORD_OUTPUT_DIR = os.path.join(BASE_DIR, "output", "Word_Drafts")
-PDF_OUTPUT_DIR = os.path.join(BASE_DIR, "output", "PDF_Final")
-
-os.makedirs(WORD_OUTPUT_DIR, exist_ok=True)
-os.makedirs(PDF_OUTPUT_DIR, exist_ok=True)
-
-def force_rtl(text):
-    return "\u202B" + str(text) + "\u202C"
-
-def load_asaneed_db(path):
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"❌ ملف قاعدة البيانات غير موجود: {path}")
-    with open(path, 'r', encoding='utf-8') as db_file:
-        data = json.load(db_file)
-        nodes = {}
-        for k, v in data.get("nodes", {}).items():
-            clean_key = str(int(float(k))) if str(k).replace('.','',1).isdigit() else str(k)
-            nodes[clean_key] = v
-        return nodes
-
-# قاموس الإجازات الجامعة
-COMPREHENSIVE_INFO = {
-    "101": {"title": "القراءات السبع من طريق الشاطبية", "short": "السبع الشاطبية", "group": "shatypia_dorra"},
-    "102": {"title": "القراءات الثلاث المتممة من طريق الدرة", "short": "الثلاث الدرة", "group": "shatypia_dorra"},
-    "103": {"title": "القراءات العشر الصغرى من طريقي الشاطبية والدرة", "short": "العشر الصغرى", "group": "shatypia_dorra"},
-    "104": {"title": "القراءات العشر الكبرى من طريق الطيبة", "short": "العشر الكبرى", "group": "tayyibah_shatypia_dorra"},
-    "105": {"title": "القراءات العشر الصغرى والكبرى معاً", "short": "العشر الصغرى والكبرى", "group": "tayyibah_shatypia_dorra"}
-}
-
-# قاموس معلومات القراءات للصفحة الواحدة
-QIRAA_INFO = {
-    "3": {"qari": "نافع المدني", "rawis_names": "قالون وورش", "rawis_ids": ["1", "2"]},
-    "6": {"qari": "ابن كثير المكي", "rawis_names": "البزي وقنبل", "rawis_ids": ["5", "4"]}, 
-    "9": {"qari": "أبي عمرو البصري", "rawis_names": "الدوري والسوسي", "rawis_ids": ["7", "8"]},
-    "12": {"qari": "ابن عامر الشامي", "rawis_names": "هشام وابن ذكوان", "rawis_ids": ["11", "10"]},
-    "15": {"qari": "عاصم الكوفي", "rawis_names": "شعبة وحفص", "rawis_ids": ["13", "14"]},
-    "18": {"qari": "حمزة الكوفي", "rawis_names": "خلف وخلاد", "rawis_ids": ["16", "17"]},
-    "21": {"qari": "الكسائي", "rawis_names": "أبي الحارث والدوري", "rawis_ids": ["19", "20"]},
-    "24": {"qari": "أبي جعفر المدني", "rawis_names": "ابن وردان وابن جماز", "rawis_ids": ["22", "23"]},
-    "27": {"qari": "يعقوب الحضرمي", "rawis_names": "رويس وروح", "rawis_ids": ["25", "26"]},
-    "30": {"qari": "خلف العاشر", "rawis_names": "إسحاق وإدريس", "rawis_ids": ["28", "29"]}
-}
-RAWI_INFO = {
-    "1": "قالون عن نافع المدني", "2": "ورش (الأزرق) عن نافع المدني",
-    "4": "قنبل عن ابن كثير المكي", "5": "البزي عن ابن كثير المكي",
-    "7": "الدوري عن أبي عمرو البصري", "8": "السوسي عن أبي عمرو البصري",
-    "10": "ابن ذكوان عن ابن عامر الشامي", "11": "هشام عن ابن عامر الشامي",
-    "13": "شعبة عن عاصم الكوفي", "14": "حفص عن عاصم الكوفي",
-    "16": "خلف عن حمزة الكوفي", "17": "خلاد عن حمزة الكوفي",
-    "19": "أبي الحارث عن الكسائي", "20": "الدوري عن الكسائي",
-    "22": "ابن وردان عن أبي جعفر المدني", "23": "ابن جماز عن أبي جعفر المدني",
-    "25": "رويس عن يعقوب الحضرمي", "26": "روح عن يعقوب الحضرمي",
-    "28": "إسحاق عن خلف العاشر", "29": "إدريس عن خلف العاشر",
-    "31": "ورش عن نافع المدني"
-}
-
-# ==========================================
-# خريطة بناء الصفحات المتعددة المعقدة
-# ==========================================
-MULTI_QIRAA_MAP = {
-    "3": {"title": "إسناد قراءة نافع", "r1_title": "رواية قالون", "r2_title": "رواية ورش", "r1": "1", "r2": "2", "q": "3"},
-    "6": {"title": "إسناد قراءة ابن كثير", "r1_title": "رواية البزي", "r2_title": "رواية قنبل", "r1": "5", "r2": "4", "q": "6"},
-    "9": {"title": "إسناد قراءة أبي عمرو", "r1_title": "رواية الدوري", "r2_title": "رواية السوسي", "r1": "7", "r2": "8", "q": "9"},
-    "12": {"title": "إسناد قراءة ابن عامر", "r1_title": "رواية هشام", "r2_title": "رواية ابن ذكوان", "r1": "11", "r2": "10", "q": "12"},
-    "15": {"title": "إسناد قراءة عاصم", "r1_title": "رواية شعبة", "r2_title": "رواية حفص", "r1": "13", "r2": "14", "q": "15"},
-    "18": {"title": "إسناد قراءة حمزة", "r1_title": "رواية خلف", "r2_title": "رواية خلاد", "r1": "16", "r2": "17", "q": "18"},
-    "21": {"title": "إسناد قراءة الكسائي", "r1_title": "رواية أبي الحارث", "r2_title": "رواية الدوري", "r1": "19", "r2": "20", "q": "21"},
-    
-    # الثلاثة الصغرى (الدرة)
-    "24": {"title": "إسناد قراءة أبي جعفر", "r1_title": "رواية ابن وردان", "r2_title": "رواية ابن جماز", "r1": "22", "r2": "23", "q": "24"},
-    "27": {"title": "إسناد قراءة يعقوب", "r1_title": "رواية رويس", "r2_title": "رواية روح", "r1": "25", "r2": "26", "q": "27"},
-    "30": {"title": "إسناد قراءة خلف العاشر", "r1_title": "رواية إسحاق", "r2_title": "رواية إدريس", "r1": "28", "r2": "29", "q": "30"},
-
-    # الثلاثة الكبرى (الطيبة)
-    "33": {"title": "إسناد قراءة أبي جعفر", "r1_title": "رواية ابن وردان", "r2_title": "رواية ابن جماز", "r1": "31", "r2": "32", "q": "33"},
-    "36": {"title": "إسناد قراءة يعقوب", "r1_title": "رواية رويس", "r2_title": "رواية روح", "r1": "34", "r2": "35", "q": "36"},
-    "39": {"title": "إسناد قراءة خلف العاشر", "r1_title": "رواية إسحاق", "r2_title": "رواية إدريس", "r1": "37", "r2": "38", "q": "39"},
-}
-
-def get_multi_sanaad(target_id_str, tariq_type, db_multi):
-    res = {f"specific_sanad_{i}": "" for i in range(1, 11)}
-    
-    def build_q(q_info, title_suffix=""):
-        rt = RichText()
-        rt.add('\u202B')
-        rt.add(q_info['title'] + title_suffix + '\n', color='C00000', bold=True, underline=True, size=32)
-        rt.add(f" ﴿ أما {q_info['r1_title']} ﴾ \n", color='C00000', bold=True, underline=True, size=28)
-        rt.add(db_multi.get(q_info['r1'], {}).get('text', '') + '\n', size=28)
-        rt.add(f" ﴿ وأما {q_info['r2_title']} ﴾ \n", color='C00000', bold=True, underline=True, size=28)
-        rt.add(db_multi.get(q_info['r2'], {}).get('text', '') + '\n\n', size=28)
-        rt.add(db_multi.get(q_info['q'], {}).get('text', '') + '\n', size=28)
-        rt.add('\u202C')
-        return rt
-
-    def build_r(rawi_id, q_info):
-        rt = RichText()
-        rt.add('\u202B')
-        title = f"إسناد {q_info['r1_title'] if q_info['r1'] == rawi_id else q_info['r2_title']} عن {q_info['title'].replace('إسناد قراءة ', '')}"
-        rt.add(title + '\n', color='C00000', bold=True, underline=True, size=32)
-        rt.add(db_multi.get(rawi_id, {}).get('text', '') + '\n\n', size=28)
-        rt.add(db_multi.get(q_info['q'], {}).get('text', '') + '\n', size=28)
-        rt.add('\u202C')
-        return rt
-
-    if target_id_str == "101":
-        for i, q_id in enumerate(["3", "6", "9", "12", "15", "18", "21"], 1):
-            res[f'specific_sanad_{i}'] = build_q(MULTI_QIRAA_MAP[q_id])
-    elif target_id_str == "102":
-        q_ids = ["33", "36", "39"] if tariq_type == "tayyibah" else ["24", "27", "30"]
-        for i, q_id in enumerate(q_ids, 1):
-            res[f'specific_sanad_{i}'] = build_q(MULTI_QIRAA_MAP[q_id])
-    elif target_id_str == "103":
-        for i, q_id in enumerate(["3", "6", "9", "12", "15", "18", "21", "24", "27", "30"], 1):
-            res[f'specific_sanad_{i}'] = build_q(MULTI_QIRAA_MAP[q_id])
-    elif target_id_str == "104":
-        for i, q_id in enumerate(["3", "6", "9", "12", "15", "18", "21", "33", "36", "39"], 1):
-            res[f'specific_sanad_{i}'] = build_q(MULTI_QIRAA_MAP[q_id])
-    elif target_id_str == "105":
-        for i, q_id in enumerate(["3", "6", "9", "12", "15", "18", "21"], 1):
-            res[f'specific_sanad_{i}'] = build_q(MULTI_QIRAA_MAP[q_id])
-            
-        def build_combined(q_min, q_maj):
-            rt = RichText()
-            rt.add('\u202B')
-            rt.add(q_min['title'] + " (من طريق الدرة)" + '\n', color='C00000', bold=True, underline=True, size=32)
-            rt.add(f" ﴿ أما {q_min['r1_title']} ﴾ \n", color='C00000', bold=True, underline=True, size=28)
-            rt.add(db_multi.get(q_min['r1'], {}).get('text', '') + '\n', size=28)
-            rt.add(f" ﴿ وأما {q_min['r2_title']} ﴾ \n", color='C00000', bold=True, underline=True, size=28)
-            rt.add(db_multi.get(q_min['r2'], {}).get('text', '') + '\n\n', size=28)
-            rt.add(db_multi.get(q_min['q'], {}).get('text', '') + '\n\n\n', size=28)
-            
-            rt.add(q_maj['title'] + " (من طريق الطيبة)" + '\n', color='C00000', bold=True, underline=True, size=32)
-            rt.add(f" ﴿ أما {q_maj['r1_title']} ﴾ \n", color='C00000', bold=True, underline=True, size=28)
-            rt.add(db_multi.get(q_maj['r1'], {}).get('text', '') + '\n', size=28)
-            rt.add(f" ﴿ وأما {q_maj['r2_title']} ﴾ \n", color='C00000', bold=True, underline=True, size=28)
-            rt.add(db_multi.get(q_maj['r2'], {}).get('text', '') + '\n', size=28)
-            rt.add(db_multi.get(q_maj['q'], {}).get('text', '') + '\n', size=28)
-            rt.add('\u202C')
-            return rt
-            
-        res['specific_sanad_8'] = build_combined(MULTI_QIRAA_MAP["24"], MULTI_QIRAA_MAP["33"])
-        res['specific_sanad_9'] = build_combined(MULTI_QIRAA_MAP["27"], MULTI_QIRAA_MAP["36"])
-        res['specific_sanad_10'] = build_combined(MULTI_QIRAA_MAP["30"], MULTI_QIRAA_MAP["39"])
-    else:
-        if target_id_str == "31":
-            raise ValueError("❌ رواية الأصبهاني غير مدعومة في الإجازات متعددة الصفحات (حيث أنها لا توجد في ملف الأسانيد المتعددة).")
+<div class="container">
+    <h2>إصدار إجازة جديدة 📜</h2>
+    <form id="ijazaForm">
         
-        mapped_id = target_id_str
-        if tariq_type == "tayyibah" and 22 <= int(target_id_str) <= 30:
-            mapped_id = str(int(target_id_str) + 9)
-            
-        for k, v in MULTI_QIRAA_MAP.items():
-            if mapped_id == v['q']:
-                res['specific_sanad_1'] = build_q(v)
-                break
-            elif mapped_id == v['r1'] or mapped_id == v['r2']:
-                res['specific_sanad_1'] = build_r(mapped_id, v)
-                break
+        <!-- 1. شكل الإجازة (الجديد) -->
+        <div class="form-group">
+            <label>شكل وتصميم الإجازة</label>
+            <div class="toggle-group">
+                <input type="radio" id="single_page" name="layout_type" value="single" checked>
+                <label for="single_page">صفحة واحدة</label>
                 
-    return res
+                <input type="radio" id="multi_page" name="layout_type" value="multi">
+                <label for="multi_page">متعددة (مفصلة)</label>
+            </div>
+        </div>
 
-# دالة التلوين للصفحة الواحدة (كما هي لم تتغير)
-def format_sanad_richtext(text, target_id):
-    if not text: return RichText()
-    rt = RichText()
-    is_long_text = len(text) > 350 
-    base_kwargs = {}
-    if is_long_text: base_kwargs['size'] = 17
-    rt.add('\u202B', **base_kwargs)
+        <div class="form-group">
+            <label for="studentName">اسم الطالب رباعياً</label>
+            <input type="text" id="studentName" required>
+        </div>
 
-    green_words = ["النبي ﷺ", "النبي", "ﷺ", "الصحابة", "رب العزة", "رَبُّ اَلْعِزَّةِ", "عز وجل", "جبريل", "جِبْريل", "الروح الأمين", "الروح اَلأمِين", "جل جلاله", "جَلَّ جَلَالُهُ", "وتقدست أسماؤه", "وَتَقَدَّسَتْ أَسْمَاؤُهُ", "أبي بن كعب", "زيد بن ثابت", "ابن عباس", "أبو هريرة", "أبي موسى الأشعري", "عبد الله بن عياش"]
-    red_words = ["وقرأ الإمام ابن الجزري", "وقرأ الداني", "وقرأ الإمام", "رواية", "قراءة", "نافع المدني", "نافع", "قالون", "ورش", "الأزرق", "ابن كثير المكي", "البزي", "قنبل", "أبي عمرو البصري", "الدوري", "السوسي", "ابن عامر الشامي", "هشام", "ابن ذكوان", "عاصم الكوفي", "شعبة", "حفص", "حمزة الكوفي", "خلف العاشر", "خلف", "خلاد", "الكسائي", "أبي الحارث", "أبي جعفر المدني", "ابن وردان", "ابن جماز", "يعقوب الحضرمي", "رويس", "روح", "إسحاق", "إدريس", "الأعمش", "الداني", "ابن الجزري", "ومن طريق الدرة:"]
-    
-    green_words.sort(key=len, reverse=True)
-    red_words.sort(key=len, reverse=True)
-    combined_pattern = f"(?P<green>{'|'.join(map(re.escape, green_words))})|(?P<red>{'|'.join(map(re.escape, red_words))})"
+        <div class="form-group">
+            <label>النوع</label>
+            <div class="toggle-group">
+                <input type="radio" id="male" name="gender" value="male" checked>
+                <label for="male">ذكر 👨</label>
+                <input type="radio" id="female" name="gender" value="female">
+                <label for="female">أنثى 🧕</label>
+            </div>
+        </div>
 
-    last_idx = 0
-    for match in re.finditer(combined_pattern, text):
-        if match.start() > last_idx: rt.add(text[last_idx:match.start()], **base_kwargs)
-        if match.group('green'): rt.add(match.group('green'), color='00B050', bold=True, **base_kwargs)
-        elif match.group('red'): rt.add(match.group('red'), color='C00000', bold=True, **base_kwargs)
-        last_idx = match.end()
+        <div class="form-group">
+            <label for="riwaya">نوع الإجازة / الرواية المطلوبة</label>
+            <select id="riwaya" required>
+                <option value="" disabled selected>اختر الإجازة...</option>
+                <optgroup label="🌟 الإجازات الجامعة">
+                    <option value="101">القراءات السبع من طريق الشاطبية</option>
+                    <option value="102">القراءات الثلاث المتممة من طريق الدرة</option>
+                    <option value="103">القراءات العشر الصغرى (شاطبية ودرة)</option>
+                    <option value="104">القراءات العشر الكبرى من طريق الطيبة</option>
+                    <option value="105">القراءات العشر الصغرى والكبرى معاً</option>
+                </optgroup>
+                <optgroup label="📖 الإجازات التفصيلية">
+                    <option value="3" style="font-weight: bold;">1. قراءة الإمام نافع المدني كاملة</option>
+                    <option value="1">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قالون عن نافع</option>
+                    <option value="2">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأزرق) عن نافع</option>
+                    <option value="31">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأصبهاني) عن نافع</option>
+                    <option value="6" style="font-weight: bold;">2. قراءة الإمام ابن كثير المكي كاملة</option>
+                    <option value="5">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية البزي عن ابن كثير</option>
+                    <option value="4">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قنبل عن ابن كثير</option>
+                    <option value="9" style="font-weight: bold;">3. قراءة الإمام أبي عمرو البصري كاملة</option>
+                    <option value="7">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية الدوري عن أبي عمرو</option>
+                    <option value="8">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية السوسي عن أبي عمرو</option>
+                    <option value="12" style="font-weight: bold;">4. قراءة الإمام ابن عامر الشامي كاملة</option>
+                    <option value="11">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية هشام عن ابن عامر</option>
+                    <option value="10">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن ذكوان عن ابن عامر</option>
+                    <option value="15" style="font-weight: bold;">5. قراءة الإمام عاصم الكوفي كاملة</option>
+                    <option value="13">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية شعبة عن عاصم</option>
+                    <option value="14">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية حفص عن عاصم</option>
+                    <option value="18" style="font-weight: bold;">6. قراءة الإمام حمزة الكوفي كاملة</option>
+                    <option value="16">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية خلف عن حمزة</option>
+                    <option value="17">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية خلاد عن حمزة</option>
+                    <option value="21" style="font-weight: bold;">7. قراءة الإمام الكسائي الكوفي كاملة</option>
+                    <option value="19">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية أبي الحارث عن الكسائي</option>
+                    <option value="20">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية الدوري عن الكسائي</option>
+                    <option value="24" style="font-weight: bold;">8. قراءة الإمام أبي جعفر المدني كاملة</option>
+                    <option value="22">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن وردان عن أبي جعفر</option>
+                    <option value="23">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن جماز عن أبي جعفر</option>
+                    <option value="27" style="font-weight: bold;">9. قراءة الإمام يعقوب الحضرمي كاملة</option>
+                    <option value="25">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية رويس عن يعقوب</option>
+                    <option value="26">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية روح عن يعقوب</option>
+                    <option value="30" style="font-weight: bold;">10. قراءة الإمام خلف العاشر كاملة</option>
+                    <option value="28">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية إسحاق عن خلف</option>
+                    <option value="29">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية إدريس عن خلف</option>
+                </optgroup>
+            </select>
+        </div>
 
-    if last_idx < len(text): rt.add(text[last_idx:], **base_kwargs)
-    rt.add('\u202C', **base_kwargs)
-    return rt
+        <div class="form-group" id="tariq-group" style="display: none;">
+            <label>طريق الإجازة</label>
+            <div class="toggle-group">
+                <input type="radio" id="shatibiyyah" name="tariq_type" value="shatibiyyah" checked>
+                <label for="shatibiyyah" id="lbl_shatibiyyah">الشاطبية</label>
+                <input type="radio" id="tayyibah" name="tariq_type" value="tayyibah">
+                <label for="tayyibah" id="lbl_tayyibah">الطيبة</label>
+                <input type="radio" id="combined" name="tariq_type" value="combined">
+                <label for="combined" id="lbl_combined_wrapper"><span id="lbl_combined_text">أكثر من طريق</span></label>
+            </div>
+        </div>
 
-def generate_ijaza_document(student_name, gender, target_id, tariq_type="shatibiyyah", layout_type="single"):
-    target_id_str = str(int(float(target_id))) if str(target_id).replace('.','',1).isdigit() else str(target_id)
-    target_id_int = int(target_id_str)
-    
-    ijaza_title = ""
-    short_type = ""
-    short_tariq = ""
-    tariq_text = ""
-    
-    # تحديد العناوين واسم القالب بناءً على نوع الطلب
-    if target_id_str in COMPREHENSIVE_INFO:
-        info = COMPREHENSIVE_INFO[target_id_str]
-        ijaza_title = info["title"]
-        short_type = info["short"]
-        short_tariq = "إجازة_جامعة"
-        
-        if layout_type == "multi":
-            template_name = "master_multi_male.docx" if gender == "male" else "master_multi_female.docx"
-        else:
-            template_name = "master_shatypia_Dorra_single_male.docx" if info["group"] == "shatypia_dorra" and gender == "male" else \
-                            "master_shatypia_Dorra_single_female.docx" if info["group"] == "shatypia_dorra" else \
-                            "master_tayyibah_shatypia_dorra_single_male.docx" if gender == "male" else "master_tayyibah_shatypia_dorra_single_female.docx"
-    else:
-        if tariq_type == "shatibiyyah_tayyibah":
-            tariq_text = "من طريقي الشاطبية والطيبة"
-            short_tariq = "شاطبية_وطيبة"
-            template_name = "master_tayyibah_7_single_male.docx" if gender == "male" else "master_tayyibah_7_single_female.docx"
-        elif tariq_type == "durrah_tayyibah":
-            tariq_text = "من طريقي الدرة والطيبة"
-            short_tariq = "درة_وطيبة"
-            template_name = "master_tayyibah_3_single_male.docx" if gender == "male" else "master_tayyibah_3_single_female.docx"
-        elif tariq_type == "tayyibah":
-            tariq_text = "من طريق الطيبة"
-            short_tariq = "طيبة"
-            template_name = "master_tayyibah_3_single_male.docx" if target_id_str == "31" or target_id_int > 21 else "master_tayyibah_7_single_male.docx"
-            if gender == "female": template_name = template_name.replace("male", "female")
-        else:
-            tariq_text = "من طريق الشاطبية" if target_id_int <= 21 else "من طريق الدرة"
-            short_tariq = "شاطبية" if target_id_int <= 21 else "درة"
-            template_name = "master_shatypia_single_male.docx" if gender == "male" else "master_shatypia_single_female.docx"
-            
-        if layout_type == "multi":
-            template_name = "master_multi_male.docx" if gender == "male" else "master_multi_female.docx"
+        <button type="submit" class="btn-submit">توليد مسودة الإجازة</button>
+    </form>
+</div>
 
-        # تحديد العنوان للإجازة التفصيلية
-        if target_id_str in QIRAA_INFO:
-            ijaza_title = f"قراءة الإمام {QIRAA_INFO[target_id_str]['qari']} براوييه {QIRAA_INFO[target_id_str]['rawis_names']} {tariq_text}"
-            short_type = QIRAA_INFO[target_id_str]['qari'].replace(" المدني", "").replace(" المكي", "").replace(" البصري", "").replace(" الشامي", "").replace(" الكوفي", "").replace(" الحضرمي", "").replace(" العاشر", "")
-        elif target_id_str in RAWI_INFO:
-            ijaza_title = f"رواية {RAWI_INFO[target_id_str]} {tariq_text}"
-            short_type = RAWI_INFO[target_id_str].split(" عن ")[0]
+<script>
+    let tg = window.Telegram.WebApp;
+    tg.expand();
 
-    TEMPLATE_PATH = os.path.join(BASE_DIR, "templates", template_name)
-    if not os.path.exists(TEMPLATE_PATH): raise FileNotFoundError(f"❌ القالب غير موجود: {TEMPLATE_PATH}")
+    const riwayaSelect = document.getElementById('riwaya');
+    const tariqGroup = document.getElementById('tariq-group');
+    const lblShatibiyyah = document.getElementById('lbl_shatibiyyah');
+    const lblTayyibah = document.getElementById('lbl_tayyibah');
+    const lblCombinedWrapper = document.getElementById('lbl_combined_wrapper');
+    const lblCombinedText = document.getElementById('lbl_combined_text');
+    const radioShatibiyyah = document.getElementById('shatibiyyah');
+    const radioTayyibah = document.getElementById('tayyibah');
+    const radioCombined = document.getElementById('combined');
 
-    # ================= تجهيز الأسانيد =================
-    multi_sanaad_dict = {f"specific_sanad_{i}": "" for i in range(1, 11)}
-    colored_sanad = RichText()
+    function updateTariqUI() {
+        const val = parseInt(riwayaSelect.value);
+        if (!val) { tariqGroup.style.display = 'none'; return; }
 
-    if layout_type == "multi":
-        db_multi = load_asaneed_db(ASANEED_MULTI_PATH)
-        multi_sanaad_dict = get_multi_sanaad(target_id_str, tariq_type, db_multi)
-    else:
-        if target_id_str not in COMPREHENSIVE_INFO: # لو كانت إجازة جامعة في صفحة واحدة لا نفعل شيئاً (تظل فارغة)
-            DB_SHAT = load_asaneed_db(ASANEED_SHATIBIYYAH_PATH)
-            DB_TAY_7 = load_asaneed_db(ASANEED_TAYYIBAH_7_PATH)
-            DB_TAY_3 = load_asaneed_db(ASANEED_TAYYIBAH_3_PATH)
-            current_db = DB_TAY_7 if tariq_type in ["shatibiyyah_tayyibah", "tayyibah"] and (target_id_int <= 21 or target_id_str == "31") else DB_TAY_3 if tariq_type in ["durrah_tayyibah", "tayyibah"] else DB_SHAT
-            
-            if target_id_str in QIRAA_INFO:
-                r1, r2 = QIRAA_INFO[target_id_str]['rawis_ids']
-                s1, s2, sq = current_db.get(r1, {}).get("text", ""), current_db.get(r2, {}).get("text", ""), current_db.get(target_id_str, {}).get("text", "")
-                final_sanad = f"{s1} {s2} \nومن طريق الدرة: {DB_SHAT.get(r1, {}).get('text', '')} {DB_SHAT.get(r2, {}).get('text', '')} \n{sq}".strip() if tariq_type == "durrah_tayyibah" else f"{s1} {s2} {sq}".strip()
-            else:
-                p_id = "3" if target_id_str == "31" else str(((target_id_int - 1) // 3) * 3 + 3)
-                sq = current_db.get(p_id, {}).get("text", "")
-                sr = current_db.get(target_id_str, {}).get("text", "")
-                final_sanad = f"{sr} \nومن طريق الدرة: {DB_SHAT.get(target_id_str, {}).get('text', '')} \n{sq}".strip() if tariq_type == "durrah_tayyibah" else f"{sr} {sq}".strip()
-            colored_sanad = format_sanad_richtext(final_sanad, target_id_str)
+        if (val >= 101) {
+            tariqGroup.style.display = 'none';
+        } else if (val === 31) {
+            tariqGroup.style.display = 'block';
+            lblShatibiyyah.style.display = 'none';
+            lblCombinedWrapper.style.display = 'none';
+            radioTayyibah.checked = true;
+        } else {
+            tariqGroup.style.display = 'block';
+            lblShatibiyyah.style.display = 'inline-block';
+            lblTayyibah.style.display = 'inline-block';
+            lblCombinedWrapper.style.display = 'inline-block';
 
-    # ================= التصدير للوورد والـ PDF =================
-    today = datetime.now()
-    hijri_obj = Gregorian.fromdate(today.date()).to_hijri()
-    days_ar = { "Saturday": "السبت", "Sunday": "الأحد", "Monday": "الاثنين", "Tuesday": "الثلاثاء", "Wednesday": "الأربعاء", "Thursday": "الخميس", "Friday": "الجمعة" }
-    g_months = { 1: "يناير", 2: "فبراير", 3: "مارس", 4: "أبريل", 5: "مايو", 6: "يونيو", 7: "يوليو", 8: "أغسطس", 9: "سبتمبر", 10: "أكتوبر", 11: "نوفمبر", 12: "ديسمبر" }
-    h_months = { 1: "محرم", 2: "صفر", 3: "ربيع الأول", 4: "ربيع الآخر", 5: "جمادى الأولى", 6: "جمادى الآخرة", 7: "رجب", 8: "شعبان", 9: "رمضان", 10: "شوال", 11: "ذو القعدة", 12: "ذو الحجة" }
-    
-    data_to_inject = {
-        "ijaza_title_details": force_rtl(ijaza_title),
-        "send_details": force_rtl(ijaza_title), 
-        "student_name": force_rtl(student_name),
-        "specific_sanad": colored_sanad,
-        "day_name": force_rtl(days_ar[today.strftime("%A")]),
-        "hijri_date": force_rtl(f"{hijri_obj.day} {h_months[hijri_obj.month]} {hijri_obj.year}"),
-        "gregorian_date": force_rtl(f"{today.day} {g_months[today.month]} {today.year}")
+            if (val <= 21) {
+                lblShatibiyyah.innerHTML = 'الشاطبية';
+                lblCombinedText.innerHTML = 'شاطبية وطيبة';
+                radioCombined.value = 'shatibiyyah_tayyibah';
+            } else if (val >= 22 && val <= 30) {
+                lblShatibiyyah.innerHTML = 'الدرة';
+                lblCombinedText.innerHTML = 'درة وطيبة';
+                radioCombined.value = 'durrah_tayyibah';
+            }
+
+            if (val !== 31 && !radioShatibiyyah.checked && !radioTayyibah.checked && !radioCombined.checked) {
+                radioShatibiyyah.checked = true;
+            }
+        }
     }
-    data_to_inject.update(multi_sanaad_dict) # دمج المتغيرات الـ 10
 
-    short_student = " ".join(str(student_name).strip().split()[:2])
-    final_file_name = re.sub(r'[<>:"/\\|?*]', '', f"{short_student} {short_type} {short_tariq}")
-    safe_name = f"Ijaza_{int(time.time())}" 
-    word_output_path = os.path.join(WORD_OUTPUT_DIR, f"{safe_name}.docx")
-    pdf_output_path = os.path.join(PDF_OUTPUT_DIR, f"{safe_name}.pdf")
+    riwayaSelect.addEventListener('change', updateTariqUI);
+    updateTariqUI();
 
-    print(f"⏳ جاري حقن البيانات في القالب ({template_name})...")
-    doc = DocxTemplate(TEMPLATE_PATH)
-    doc.render(data_to_inject)
-    doc.save(word_output_path)
+    document.getElementById('ijazaForm').addEventListener('submit', function(e) {
+        e.preventDefault(); 
+        
+        let selectedTariq = "comprehensive";
+        if (parseInt(document.getElementById('riwaya').value) < 101) {
+            const checkedTariq = document.querySelector('input[name="tariq_type"]:checked');
+            if(checkedTariq) selectedTariq = checkedTariq.value;
+        }
 
-    print("⏳ جاري تحويل الإجازة إلى PDF...")
-    try:
-        pythoncom.CoInitialize()
-        convert(word_output_path, pdf_output_path)
-        return pdf_output_path, final_file_name 
-    except Exception as e:
-        print(f"❌ حدث خطأ أثناء تحويل PDF: {e}")
-        return word_output_path, final_file_name
-    finally:
-        pythoncom.CoUninitialize()
+        const formData = {
+            name: document.getElementById('studentName').value,
+            gender: document.querySelector('input[name="gender"]:checked').value,
+            tariq_type: selectedTariq,
+            target_id: document.getElementById('riwaya').value,
+            layout_type: document.querySelector('input[name="layout_type"]:checked').value
+        };
+
+        if(!formData.target_id) { tg.showAlert("الرجاء اختيار نوع الإجازة!"); return; }
+
+        const btn = document.querySelector('.btn-submit');
+        btn.textContent = "جاري تحضير المعاينة... ⏳";
+        btn.disabled = true;
+
+        tg.sendData(JSON.stringify(formData));
+        tg.close();
+    });
+</script>
+</body>
+</html>
