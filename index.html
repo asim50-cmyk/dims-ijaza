@@ -14,9 +14,9 @@
         label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--tg-theme-text-color, #555); }
         input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; font-size: 14px; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #333); box-sizing: border-box; }
         input[type="text"]:focus, select:focus { border-color: var(--tg-theme-button-color, #3498db); outline: none; }
-        .toggle-group { display: flex; gap: 10px; }
+        .toggle-group { display: flex; gap: 8px; }
         .toggle-group input[type="radio"] { display: none; }
-        .toggle-group label { flex: 1; text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; transition: all 0.3s; margin: 0; font-size: 14px;}
+        .toggle-group label { flex: 1; text-align: center; padding: 8px 5px; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; transition: all 0.3s; margin: 0; font-size: 13px; font-weight: bold;}
         .toggle-group input[type="radio"]:checked + label { background-color: var(--tg-theme-button-color, #2c3e50); color: var(--tg-theme-button-text-color, #fff); border-color: var(--tg-theme-button-color, #2c3e50); }
         .btn-submit { width: 100%; padding: 12px; background-color: var(--tg-theme-button-color, #27ae60); color: var(--tg-theme-button-text-color, white); border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; transition: opacity 0.3s; margin-top: 10px; }
         .btn-submit:hover { opacity: 0.8; }
@@ -29,7 +29,7 @@
     <h2>إصدار إجازة جديدة 📜</h2>
     <form id="ijazaForm">
         
-        <!-- 1. شكل الإجازة (الجديد) -->
+        <!-- 1. شكل الإجازة -->
         <div class="form-group">
             <label>شكل وتصميم الإجازة</label>
             <div class="toggle-group">
@@ -56,53 +56,30 @@
             </div>
         </div>
 
+        <!-- 2. التصنيف الأساسي للإجازة (الإضافة الجديدة) -->
         <div class="form-group">
-            <label for="riwaya">نوع الإجازة / الرواية المطلوبة</label>
+            <label>التصنيف الأساسي</label>
+            <div class="toggle-group">
+                <input type="radio" id="cat_individual" name="main_category" value="individual" checked>
+                <label for="cat_individual">قراءة/رواية</label>
+                
+                <input type="radio" id="cat_comprehensive" name="main_category" value="comprehensive">
+                <label for="cat_comprehensive">جامعة/مجموعات</label>
+                
+                <input type="radio" id="cat_mutun" name="main_category" value="mutun">
+                <label for="cat_mutun">المتون</label>
+            </div>
+        </div>
+
+        <!-- 3. القائمة المنسدلة المتغيرة -->
+        <div class="form-group">
+            <label for="riwaya">التفاصيل المطلوبة</label>
             <select id="riwaya" required>
-                <option value="" disabled selected>اختر الإجازة...</option>
-                <optgroup label="🌟 الإجازات الجامعة">
-                    <option value="101">القراءات السبع من طريق الشاطبية</option>
-                    <option value="102">القراءات الثلاث المتممة من طريق الدرة</option>
-                    <option value="103">القراءات العشر الصغرى (شاطبية ودرة)</option>
-                    <option value="104">القراءات العشر الكبرى من طريق الطيبة</option>
-                    <option value="105">القراءات العشر الصغرى والكبرى معاً</option>
-                </optgroup>
-                <optgroup label="📖 الإجازات التفصيلية">
-                    <option value="3" style="font-weight: bold;">1. قراءة الإمام نافع المدني كاملة</option>
-                    <option value="1">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قالون عن نافع</option>
-                    <option value="2">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأزرق) عن نافع</option>
-                    <option value="31">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأصبهاني) عن نافع</option>
-                    <option value="6" style="font-weight: bold;">2. قراءة الإمام ابن كثير المكي كاملة</option>
-                    <option value="5">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية البزي عن ابن كثير</option>
-                    <option value="4">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قنبل عن ابن كثير</option>
-                    <option value="9" style="font-weight: bold;">3. قراءة الإمام أبي عمرو البصري كاملة</option>
-                    <option value="7">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية الدوري عن أبي عمرو</option>
-                    <option value="8">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية السوسي عن أبي عمرو</option>
-                    <option value="12" style="font-weight: bold;">4. قراءة الإمام ابن عامر الشامي كاملة</option>
-                    <option value="11">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية هشام عن ابن عامر</option>
-                    <option value="10">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن ذكوان عن ابن عامر</option>
-                    <option value="15" style="font-weight: bold;">5. قراءة الإمام عاصم الكوفي كاملة</option>
-                    <option value="13">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية شعبة عن عاصم</option>
-                    <option value="14">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية حفص عن عاصم</option>
-                    <option value="18" style="font-weight: bold;">6. قراءة الإمام حمزة الكوفي كاملة</option>
-                    <option value="16">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية خلف عن حمزة</option>
-                    <option value="17">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية خلاد عن حمزة</option>
-                    <option value="21" style="font-weight: bold;">7. قراءة الإمام الكسائي الكوفي كاملة</option>
-                    <option value="19">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية أبي الحارث عن الكسائي</option>
-                    <option value="20">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية الدوري عن الكسائي</option>
-                    <option value="24" style="font-weight: bold;">8. قراءة الإمام أبي جعفر المدني كاملة</option>
-                    <option value="22">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن وردان عن أبي جعفر</option>
-                    <option value="23">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن جماز عن أبي جعفر</option>
-                    <option value="27" style="font-weight: bold;">9. قراءة الإمام يعقوب الحضرمي كاملة</option>
-                    <option value="25">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية رويس عن يعقوب</option>
-                    <option value="26">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية روح عن يعقوب</option>
-                    <option value="30" style="font-weight: bold;">10. قراءة الإمام خلف العاشر كاملة</option>
-                    <option value="28">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية إسحاق عن خلف</option>
-                    <option value="29">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية إدريس عن خلف</option>
-                </optgroup>
+                <!-- يتم حقن الخيارات هنا بواسطة الجافاسكريبت بناءً على التصنيف -->
             </select>
         </div>
 
+        <!-- 4. أزرار الطرق (ثابتة كما هي وتظهر فقط مع القراءات/الروايات) -->
         <div class="form-group" id="tariq-group" style="display: none;">
             <label>طريق الإجازة</label>
             <div class="toggle-group">
@@ -133,10 +110,95 @@
     const radioTayyibah = document.getElementById('tayyibah');
     const radioCombined = document.getElementById('combined');
 
+    // ==========================================
+    // البيانات الخاصة بالقوائم المنسدلة
+    // ==========================================
+    const optionsHTML = {
+        individual: `
+            <option value="" disabled selected>اختر القراءة أو الرواية...</option>
+            <option value="3" style="font-weight: bold;">1. قراءة الإمام نافع المدني كاملة</option>
+            <option value="1">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قالون عن نافع</option>
+            <option value="2">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأزرق) عن نافع</option>
+            <option value="31">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ورش (الأصبهاني) عن نافع</option>
+            <option value="6" style="font-weight: bold;">2. قراءة الإمام ابن كثير المكي كاملة</option>
+            <option value="5">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية البزي عن ابن كثير</option>
+            <option value="4">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية قنبل عن ابن كثير</option>
+            <option value="9" style="font-weight: bold;">3. قراءة الإمام أبي عمرو البصري كاملة</option>
+            <option value="7">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية الدوري عن أبي عمرو</option>
+            <option value="8">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية السوسي عن أبي عمرو</option>
+            <option value="12" style="font-weight: bold;">4. قراءة الإمام ابن عامر الشامي كاملة</option>
+            <option value="11">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية هشام عن ابن عامر</option>
+            <option value="10">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن ذكوان عن ابن عامر</option>
+            <option value="15" style="font-weight: bold;">5. قراءة الإمام عاصم الكوفي كاملة</option>
+            <option value="13">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية شعبة عن عاصم</option>
+            <option value="14">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية حفص عن عاصم</option>
+            <option value="18" style="font-weight: bold;">6. قراءة الإمام حمزة الكوفي كاملة</option>
+            <option value="16">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية خلف عن حمزة</option>
+            <option value="17">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية خلاد عن حمزة</option>
+            <option value="21" style="font-weight: bold;">7. قراءة الإمام الكسائي الكوفي كاملة</option>
+            <option value="19">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية أبي الحارث عن الكسائي</option>
+            <option value="20">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية الدوري عن الكسائي</option>
+            <option value="24" style="font-weight: bold;">8. قراءة الإمام أبي جعفر المدني كاملة</option>
+            <option value="22">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن وردان عن أبي جعفر</option>
+            <option value="23">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية ابن جماز عن أبي جعفر</option>
+            <option value="27" style="font-weight: bold;">9. قراءة الإمام يعقوب الحضرمي كاملة</option>
+            <option value="25">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية رويس عن يعقوب</option>
+            <option value="26">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية روح عن يعقوب</option>
+            <option value="30" style="font-weight: bold;">10. قراءة الإمام خلف العاشر كاملة</option>
+            <option value="28">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية إسحاق عن خلف</option>
+            <option value="29">&nbsp;&nbsp;&nbsp;&nbsp; ↳ رواية إدريس عن خلف</option>
+        `,
+        comprehensive: `
+            <option value="" disabled selected>اختر الإجازة الجامعة...</option>
+            <optgroup label="🌟 الإجازات الجامعة (القراءات)">
+                <option value="101">القراءات السبع من طريق الشاطبية</option>
+                <option value="102">القراءات الثلاث المتممة من طريق الدرة</option>
+                <option value="103">القراءات العشر الصغرى (شاطبية ودرة)</option>
+                <option value="104">القراءات العشر الكبرى من طريق الطيبة</option>
+                <option value="105">القراءات العشر الصغرى والكبرى معاً</option>
+            </optgroup>
+            <optgroup label="👥 مجموعات خاصة">
+                <option value="201">أصحاب التوسط</option>
+                <option value="202">أصحاب الصلة</option>
+                <option value="203">البصريين</option>
+                <option value="204">ابن عامر وعاصم</option>
+                <option value="205">الكسائي وخلف العاشر</option>
+            </optgroup>
+        `,
+        mutun: `
+            <option value="" disabled selected>اختر المتن المطلوب...</option>
+            <option value="301">متن تحفة الأطفال</option>
+            <option value="302">متن حرز الأماني (الشاطبية)</option>
+            <option value="303">متن الدرة المضية</option>
+            <option value="304">متن المقدمة الجزرية</option>
+            <option value="305">متن طيبة النشر</option>
+            <option value="310">المتون الجامعة (إجازة متعددة)</option>
+        `
+    };
+
+    // ==========================================
+    // دالة تحديث القائمة المنسدلة عند تغيير التصنيف
+    // ==========================================
+    function updateDropdownOptions() {
+        const selectedCat = document.querySelector('input[name="main_category"]:checked').value;
+        riwayaSelect.innerHTML = optionsHTML[selectedCat];
+        updateTariqUI(); // إعادة ضبط إخفاء/إظهار الطرق
+    }
+
+    // ربط أزرار التصنيف الأساسي بدالة التحديث
+    const categoryRadios = document.querySelectorAll('input[name="main_category"]');
+    categoryRadios.forEach(radio => {
+        radio.addEventListener('change', updateDropdownOptions);
+    });
+
+    // ==========================================
+    // دالة تحديث أزرار الطرق
+    // ==========================================
     function updateTariqUI() {
         const val = parseInt(riwayaSelect.value);
         if (!val) { tariqGroup.style.display = 'none'; return; }
 
+        // إخفاء الطرق للإجازات الجامعة، المجموعات الخاصة، والمتون (أي ID أكبر من 100)
         if (val >= 101) {
             tariqGroup.style.display = 'none';
         } else if (val === 31) {
@@ -167,8 +229,13 @@
     }
 
     riwayaSelect.addEventListener('change', updateTariqUI);
-    updateTariqUI();
+    
+    // تشغيل التحديث لأول مرة عند فتح الصفحة
+    updateDropdownOptions();
 
+    // ==========================================
+    // دالة الإرسال إلى تليجرام
+    // ==========================================
     document.getElementById('ijazaForm').addEventListener('submit', function(e) {
         e.preventDefault(); 
         
@@ -198,5 +265,3 @@
 </script>
 </body>
 </html>
-
-
