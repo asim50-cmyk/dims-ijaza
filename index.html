@@ -8,7 +8,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: var(--tg-theme-bg-color, #f4f7f6); color: var(--tg-theme-text-color, #333); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .container { background-color: var(--tg-theme-secondary-bg-color, #fff); padding: 30px 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 500px; }
+        .container { background-color: var(--tg-theme-secondary-bg-color, #fff); padding: 30px 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 500px; position: relative;}
         h2 { text-align: center; color: var(--tg-theme-button-color, #2c3e50); margin-bottom: 25px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--tg-theme-text-color, #555); }
@@ -20,6 +20,11 @@
         .toggle-group input[type="radio"]:checked + label { background-color: var(--tg-theme-button-color, #2c3e50); color: var(--tg-theme-button-text-color, #fff); border-color: var(--tg-theme-button-color, #2c3e50); }
         .btn-submit { width: 100%; padding: 12px; background-color: var(--tg-theme-button-color, #27ae60); color: var(--tg-theme-button-text-color, white); border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; font-family: inherit; transition: opacity 0.3s; margin-top: 10px; }
         .btn-submit:hover { opacity: 0.8; }
+        
+        /* تصميم زر سجل الإجازات الجديد */
+        .btn-archive { width: 100%; padding: 10px; background-color: #f39c12; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; font-family: inherit; transition: opacity 0.3s; margin-top: 15px; }
+        .btn-archive:hover { background-color: #e67e22; }
+        
         select optgroup { font-weight: bold; background: #f9f9f9; }
     </style>
 </head>
@@ -30,7 +35,6 @@
 <p style="text-align: center; font-size: 13px; color: #7f8c8d; margin-top: 0; margin-bottom: 25px; font-weight: 600;">لا تنسَ عاصم من صالح دعائك 🤍</p>
     <form id="ijazaForm">
         
-        <!-- 1. شكل الإجازة -->
         <div class="form-group">
             <label>شكل وتصميم الإجازة</label>
             <div class="toggle-group">
@@ -57,7 +61,6 @@
             </div>
         </div>
 
-        <!-- 2. التصنيف الأساسي للإجازة (الإضافة الجديدة) -->
         <div class="form-group">
             <label>التصنيف الأساسي</label>
             <div class="toggle-group">
@@ -72,15 +75,12 @@
             </div>
         </div>
 
-        <!-- 3. القائمة المنسدلة المتغيرة -->
         <div class="form-group">
             <label for="riwaya">التفاصيل المطلوبة</label>
             <select id="riwaya" required>
-                <!-- يتم حقن الخيارات هنا بواسطة الجافاسكريبت بناءً على التصنيف -->
             </select>
         </div>
 
-        <!-- 4. أزرار الطرق (ثابتة كما هي وتظهر فقط مع القراءات/الروايات) -->
         <div class="form-group" id="tariq-group" style="display: none;">
             <label>طريق الإجازة</label>
             <div class="toggle-group">
@@ -94,6 +94,8 @@
         </div>
 
         <button type="submit" class="btn-submit">توليد مسودة الإجازة</button>
+        <!-- 💡 زر سجل الإجازات الجديد -->
+        <button type="button" class="btn-archive" onclick="openArchive()">📂 فتح سجل الإجازات (الأرشيف)</button>
     </form>
 </div>
 
@@ -111,9 +113,6 @@
     const radioTayyibah = document.getElementById('tayyibah');
     const radioCombined = document.getElementById('combined');
 
-    // ==========================================
-    // البيانات الخاصة بالقوائم المنسدلة
-    // ==========================================
     const optionsHTML = {
         individual: `
             <option value="" disabled selected>اختر القراءة أو الرواية...</option>
@@ -177,29 +176,21 @@
         `
     };
 
-    // ==========================================
-    // دالة تحديث القائمة المنسدلة عند تغيير التصنيف
-    // ==========================================
     function updateDropdownOptions() {
         const selectedCat = document.querySelector('input[name="main_category"]:checked').value;
         riwayaSelect.innerHTML = optionsHTML[selectedCat];
-        updateTariqUI(); // إعادة ضبط إخفاء/إظهار الطرق
+        updateTariqUI();
     }
 
-    // ربط أزرار التصنيف الأساسي بدالة التحديث
     const categoryRadios = document.querySelectorAll('input[name="main_category"]');
     categoryRadios.forEach(radio => {
         radio.addEventListener('change', updateDropdownOptions);
     });
 
-    // ==========================================
-    // دالة تحديث أزرار الطرق
-    // ==========================================
     function updateTariqUI() {
         const val = parseInt(riwayaSelect.value);
         if (!val) { tariqGroup.style.display = 'none'; return; }
 
-        // إخفاء الطرق للإجازات الجامعة، المجموعات الخاصة، والمتون (أي ID أكبر من 100)
         if (val >= 101) {
             tariqGroup.style.display = 'none';
         } else if (val === 31) {
@@ -230,13 +221,15 @@
     }
 
     riwayaSelect.addEventListener('change', updateTariqUI);
-    
-    // تشغيل التحديث لأول مرة عند فتح الصفحة
     updateDropdownOptions();
 
-    // ==========================================
-    // دالة الإرسال إلى تليجرام
-    // ==========================================
+    // 💡 دالة إرسال أمر "فتح الأرشيف" للبوت
+    function openArchive() {
+        const payload = { action: "open_archive" };
+        tg.sendData(JSON.stringify(payload));
+        tg.close();
+    }
+
     document.getElementById('ijazaForm').addEventListener('submit', function(e) {
         e.preventDefault(); 
         
@@ -247,6 +240,7 @@
         }
 
         const formData = {
+            action: "generate_ijaza", // أضفنا هذا التمييز ليعرف البوت أن هذا طلب توليد
             name: document.getElementById('studentName').value,
             gender: document.querySelector('input[name="gender"]:checked').value,
             tariq_type: selectedTariq,
